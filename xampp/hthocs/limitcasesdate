@@ -1,0 +1,79 @@
+
+<h3 >c. Οι χώρες με κρούσματα πάνω από ένα όριο (νούμερο από το χρήστη) σε μια χρονική περίοδο (πάλι από το χρήστη)</h3>
+<form method="post">
+  <div class="form-group">
+	<input <?php if (! is_null($_POST['limit'])) { echo ' value="'.$_POST['limit'].'" ';  };?> type="text" placeholder="Όριο κρουσμάτων και πάνω" id="Limit" class="input-sm form-control" name="limit" />
+  </div>
+		<div class="input-daterange input-group" id="datepicker">
+			<input <?php if (! is_null($_POST['start'])) { echo ' value="'.$_POST['start'].'" ';  };?> type="text" placeholder="Ημερομηνία έναρξης: π.χ. 01/03/2021" class="input-sm form-control" name="start" id="Startl"/>
+				<span class="input-group-addon">έως</span>
+			<input <?php if (! is_null($_POST['end'])) { echo ' value="'.$_POST['end'].'" ';  };?> type="text" placeholder="Ημερομηνία τέλους: π.χ. 13/03/2021" class="input-sm form-control" name="end" id="Endl"/>
+    </div>
+	<input class="btn btn-primary" type="submit" value="Submit">
+</div>
+</form>
+
+
+
+<?php
+$Limit=$_POST["limit"];
+$StartDate=$_POST["start"];
+$EndDate=$_POST["end"];
+if ($Limit=="" || is_null($Limit)) {
+	$Limit = 0;
+}
+else {
+	$Limit=$_POST["limit"];
+}
+if ($StartDate=="" || is_null($StartDate)) {
+	$StartDate = "";
+}
+else {
+	$StartDate=$_POST["start"];
+}
+if ($EndDate=="" || is_null($EndDate)) {
+	$EndDate = "";
+}
+else {
+	$EndDate=$_POST["end"];
+}
+$db=new MyDB();
+$db->change_db("ergasia");
+$sql="SELECT 
+		country, SUM(cases) as totalcases
+	FROM
+		death_data
+	WHERE
+		STR_TO_DATE(date, '%d/%m/%Y') BETWEEN STR_TO_DATE('".$StartDate."','%d/%m/%Y') and STR_TO_DATE('".$EndDate."', '%d/%m/%Y')
+	GROUP BY country;";
+
+	$result = $db->mysqli_($sql);
+	//echo $sql;
+	$totalcases=mysqli_fetch_all($result);
+	//var_dump($totalcases);
+	
+	echo '<table class="table table-striped">
+  <thead>
+    <tr>
+	  <th scope="col">#</th>
+      <th scope="col">Country</th>
+      <th scope="col">Cases</th>
+    </tr>
+  </thead><tbody>';
+  $i=1;
+  foreach ($totalcases as &$val_tz) {
+	  if ($val_tz[1]>=$Limit) {
+		  echo '
+  
+    <tr>
+      <td scope="row">'.$i.'</td>
+      <td>'.$val_tz[0].'</td>
+      <td>'.$val_tz[1].'</td>
+    </tr> ';
+		$i++;
+	  }
+  }
+	echo '</tbody></table>';
+	// Testing data
+	echo 'Last error: ', json_last_error_msg(), PHP_EOL, PHP_EOL;
+?>
